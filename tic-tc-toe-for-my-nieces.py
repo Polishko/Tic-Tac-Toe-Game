@@ -69,6 +69,13 @@ def check_if_won(current, board):
         loop = False
 
 
+def check_if_draw(board):
+    global loop
+    if not any([item == " " for r in board for item in r]):
+        print("Oyun berabere bitti")
+        loop = False
+
+
 def play(current, board):
     choice = get_player_choice(current)
     row = ceil(choice / 3) - 1
@@ -76,6 +83,7 @@ def play(current, board):
     board[row][col] = current[1]
     draw_board(board)
     check_if_won(current, board)
+    check_if_draw(board)
 
 
 player_one = None
