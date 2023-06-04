@@ -1,12 +1,26 @@
 from math import ceil
+from pyfiglet import figlet_format
+import fontstyle
+
+title = {"3": "purple", "TAS": "yellow", "OYUNU": "green"}
+
+for word, color in title.items():
+    print(fontstyle.apply(figlet_format(word), color))
+
+
+def start_game():
+    global game_board
+    game_board = [[" " for col in range(3)] for row in range(3)]
+    setup()
 
 
 def get_valid_player_sign():
-    print("Oyuncu 1, 'X' veya 'O' ile mi oynamak istersin?: ")
+    print(fontstyle.apply("Oyuncu 1, 'X' veya 'O' ile mi oynamak istersin?", "blue"))
+  
     while True:
         sign = input().capitalize()
-        if sign != "X" and sign != "O":
-            print("Yanlis secim. 'X' veya 'O' gir:")
+        if sign not in "X0O":
+            print(fontstyle.apply("Yanlis secim. 'X' veya 'O' gir:", "red"))
             continue
         else:
             break
@@ -15,18 +29,19 @@ def get_valid_player_sign():
 
 
 def get_player_choice(a):
-    print(f"{a[0]}, bos bir kutu sec [1-9]: ")
+    print(f"{fontstyle.apply(a[0], 'blue')}, 1-9 arasinda bos bir kutu sec: ")
+  
     while True:
         try:
             val = int(input())
         except ValueError:
-            print("Rakam girmelisin. Yeni deger gir:")
+            print(fontstyle.apply("Rakam girmelisin. Yeni deger gir:", "red"))
             continue
         if not 1 <= val <= 9:
-            print("Boyle bir kutu yok/ Yeni kutu degeri gir: ")
+            print(fontstyle.apply("Boyle bir kutu yok. Kutu icin yeni bir sayi gir:", "red"))
             continue
         if game_board[ceil(val / 3) - 1][(val % 3) - 1] != " ":
-            print("Kutu dolu/Yeni kutu sec: ")
+            print(fontstyle.apply("Bu kutu dolu. Yeni kutu sec:", "red"))
             continue
         else:
             return val
@@ -34,46 +49,60 @@ def get_player_choice(a):
 
 def setup():
     global player_one, player_two
-    player_one_name = input("Oyuncu 1 adi: ")
-    player_two_name = input("Oyuncu 2 adi: ")
+  
+    player_one_name = input("Oyuncu 1, adini yazar misin?: ")
+    player_two_name = input("Oyuncu 2 adini yazar misin?: ")
     player_one_sign = get_valid_player_sign()
-    player_two_sign = "X" if player_one_sign == "O" else "O"
+    player_two_sign = "X" if player_one_sign == "O" or player_one_sign == "0" else "O"
     player_one = [player_one_name, player_one_sign]
     player_two = [player_two_name, player_two_sign]
-    print("Bunlar, oyun sirasinda kutu secmek icin kullanacagin numaralar.")
-    [print(f"| {i} | {i + 1} | {i + 2} |") for i in range(1, 8, 3)]
-    print(f"{player_one_name} basliyor!")
+    print("Bunlar kutularin numaralari. Kutu secmek icin numarasini girmelisin.")
+    [print(f"| {fontstyle.apply(i, 'blue')} | {fontstyle.apply(i + 1, 'blue')} | {fontstyle.apply(i + 2, 'blue')} |")\
+     for i in range(1, 8, 3)]
+    print(f"{fontstyle.apply(player_one_name, 'blue')} basliyor!")
 
 
 def draw_board(board):
     for row in board:
         print("| ", end="")
-        print(" | ".join([str(x) for x in row]), end="")
+        print(" | ".join([fontstyle.apply(str(x), "green") for x in row]), end="")
         print(" |")
 
 
 def check_if_won(current, board):
     global loop
-    first_row = all([x == current[1] for x in board[0]])
-    second_row = all([x == current[1] for x in board[1]])
-    third_row = all([x == current[1] for x in board[2]])
-    first_column = all(x == current[1] for x in [board[0][0], board[1][0], board[2][0]])
-    second_column = all(x == current[1] for x in [board[0][1], board[1][1], board[2][1]])
-    third_column = all(x == current[1] for x in [board[0][2], board[1][2], board[2][2]])
-    first_diagonal = all(x == current[1] for x in [board[0][0], board[1][1], board[2][2]])
-    second_diagonal = all(x == current[1] for x in [board[0][2], board[1][1], board[2][0]])
+    global new_game
+  
+    rows = any([all(True if pos == current[1] else False for pos in r) for r in board])
+    cols = any([all([board[r][c] == current[1] for r in range(3)]) for c in range(3)])
+    first_diagonal = all([board[i][i] == current[1] for i in range(3)])
+    second_diagonal = all([board[i][3 - i - 1] == current[1] for i in range(3)])
 
-    if any([first_row, second_row, third_row, first_column,
-            second_column, third_column, first_diagonal, second_diagonal]):
-        print(f"{current[0]} kazandi!")
-        loop = False
+    if any([rows, cols, first_diagonal, second_diagonal]):
+        print(fontstyle.apply(f"{current[0]} kazandi!", "cyan"))
+        print("Tekrar oynamak icin 'E'ye bas;\ncikmak icin baska bir tusa bas")
+
+        if input().capitalize() != "E":
+            loop = False
+        else:
+            new_game = True
+
+    else:
+        check_if_draw(game_board)
 
 
 def check_if_draw(board):
     global loop
+    global new_game
+
     if not any([item == " " for r in board for item in r]):
-        print("Oyun berabere bitti")
-        loop = False
+        print(fontstyle.apply("Oyun berabere bitti", "purple"))
+        print("Tekrar oynamak icin 'E'ye bas;\ncikmak icin baska bir tusa bas")
+
+        if input().capitalize() != "E":
+            loop = False
+        else:
+            new_game = True
 
 
 def play(current, board):
@@ -83,19 +112,22 @@ def play(current, board):
     board[row][col] = current[1]
     draw_board(board)
     check_if_won(current, board)
-    check_if_draw(board)
 
 
-player_one = None
-player_two = None
-
-game_board = [[" " for col in range(3)] for row in range(3)]
-setup()
+player_one, player_two = None, None
+game_board = ""
+start_game()
 current_player = player_one
 other = player_two
+
 loop = True
-
-
+new_game = False
 while loop:
     play(current_player, game_board)
     current_player, other = other, current_player
+
+    if new_game:
+        start_game()
+        current_player = player_one
+        other = player_two
+        new_game = False
